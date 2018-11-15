@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "formidable": "^1.2.1",
+    "gulp-sass": "^4.0.2"
+  }
+}

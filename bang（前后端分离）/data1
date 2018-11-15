@@ -1,0 +1,34 @@
+{"advert":{[
+	{
+		"title":"热门手机回收",
+		"href":"http://bang.360.cn/huishou?from=index",
+		"type":3,
+		"images":"img/phone_back.png",
+		[{
+			"img":"img/t01068fe5e76aa7e910.jpg",
+			"p":"苹果iphone 6",
+			"url":"http://bang.360.cn/huishou?from=index#brand=10&pid=1"
+		},
+		{
+			"img":"img/t01078047308a85471c.jpg",
+			"p":"小米4"
+			"url":"http://bang.360.cn/huishou?from=index#brand=10&pid=4442"
+		},
+		{
+			"img":"img/t01068fe5e76aa7e910.jpg",
+			"p":"苹果iphone 5s",
+			"url":"http://bang.360.cn/huishou?from=index#brand=10&pid=4442"
+		},
+		{
+			"img":"img/t01078047308a85471c.jpg",
+			"p":"华为Mate 7",
+			"url":"http://bang.360.cn/huishou?from=index#brand=10&pid=4442"
+		},
+		{
+			"img":"img/t0127e99c045a53e82e.jpg",
+			"p":"魅族XM5",
+			"url":"http://bang.360.cn/huishou?from=index#brand=10&pid=4442"
+		}]
+	}]
+	}
+}

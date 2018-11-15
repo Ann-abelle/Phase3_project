@@ -1,0 +1,18 @@
+1、用户表
+    _id
+    phoneId
+    createTime
+2、商品表
+    _id
+    goodsName:
+    goodsPrice
+    storeNum
+    addTime
+3、购物车信息
+    _id
+    phoneId
+    goodsId:
+    goodsName:
+    goodsPrice:
+    buyNum:
+    buyTime

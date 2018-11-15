@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>广告管理</title>
+    <style>
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+        table td{
+            border:1px solid yellow;
+            text-align:center;
+        }
+    </style>
+    <script src="js/baiduTemplate.js"></script>
+</head>
+<body>
+<form action="" name="advForm" id="myForm">
+    <input type="text" name="id">
+    <p>广告标题：<input type="text" name="advName"></p>
+    <p>广告类别：<select name="advType" id="">
+        <option value="1">轮播图</option>
+        <option value="2">轮播图底部</option>
+        <option value="3">优品精选</option>
+        <option value="4">热门回收</option>
+    </select></p>
+    <p>广告图片：<input type="file" name="advPic">
+
+        <img width="150" id="myPic" src="" alt="">
+    
+    </p>
+    <p>广告链接：<input type="text" name="advUrl"></p>
+    <p>广告排序：<input type="text" name="orderBy"></p>
+    <p><input  name="btn" type="button" value="提交"></p>
+</form>
+<div>
+    <input type="button" value="全部" onclick="getAdvType(0)">
+    <input type="button" value="轮播图" onclick="getAdvType(1)">
+    <input type="button" value="轮播图底部" onclick="getAdvType(2)">
+    <input type="button" value="优品精选" onclick="getAdvType(3)">
+    <input type="button" value="热门回收" onclick="getAdvType(4)">
+
+
+    <input type="button" value="默认" onclick="sortFn(1)">
+    <input type="button" value="orderBy" onclick="sortFn(2)">
+    <input type="button" value="addTime" onclick="sortFn(3)">
+    <input type="button" value="类别" onclick="sortFn(4)">
+</div>
+<div id="wrap">
+
+</div>
+<script type="text/html" id="tp">
+    <table>
+        <tr>
+            <td>广告标题</td>
+            <td>广告链接</td>
+            <td>广告图片</td>
+            <td>广告排序</td>
+            <td>广告时间</td>
+            <td>广告类型</td>
+            <td>操作</td>
+        </tr>
+        <%for(var i=0;i<advList.length;i++){%>
+        <tr>
+            <td><%=advList[i].advName%></td>
+            <td><%=advList[i].advUrl%></td>
+            <td><img width="100" src="<%=advList[i].advPic%>" alt=""></td>
+            <td><%=advList[i].orderBy%></td>
+            <td><%=advList[i].addTime%></td>
+            <td><%=advList[i].advType%></td>
+            <td> <a href="javascript:; " onclick="getAdvInfoById('<%=advList[i]._id%>')">修改</a>  删除</td>
+        </tr>
+        <%}%>
+    </table>
+    <div>
+        <!--当前页等于1的时候省略上一页，当前页等于总页数时，省略下一页-->
+        <a href="javascript:;" onclick="getAdvList(pageIndex-1)">上一页</a>
+        <%=pageIndex%>/<%=pageSum%>
+        <a href="javascript:;" onclick="getAdvList(pageIndex+1)">下一页</a>
+    </div>
+</script>
+</body>
+<script>
+    // formdata
+    var btn=document.querySelector("input[name='btn']");
+    var pageIndex=1;
+    var sortType=1;
+    var advType=0;
+    getAdvList(1);
+    btn.onclick=function(){
+        var url="http://127.0.0.1/addAdv";
+        if(document.advForm.id.value.length>0){//修改
+            url="http://127.0.0.1/upAdv";
+        }
+        var formdata=new FormData(document.querySelector("#myForm"));
+        var xhr=new XMLHttpRequest();
+        xhr.open("post",url);
+        xhr.send(formdata);
+        xhr.onload=function(){
+            var obj=JSON.parse(xhr.responseText);
+            if(obj.ok===1){
+                document.advForm.reset();
+                btn.value="提交";
+                getAdvList(1);
+            }
+
+            else
+                alert(obj.msg);
+        }
+
+
+
+
+
+
+        // 结合表单当中的name与value,对其进行序列化。
+        // var formdata=new FormData(document.querySelector("#myForm"));
+        // formdata.delete("advName");
+        // console.log(formdata.has("advName"));
+        // console.log(formdata.get("advName"));
+
+
+
+        // formdata.append("advName","hahahahaha");
+        // console.log(formdata.get("advName"));
+        // console.log(formdata.getAll("advName"));
+
+
+
+        // 重置或添加
+        // formdata.set("advName","lalalalal");
+        // console.log(formdata.get("advName"));
+        // formdata.set("a","我是a");
+        // console.log(formdata.get("a"));
+    }
+    function getAdvType(type){
+        advType=type;
+        getAdvList(pageIndex);
+    }
+    function sortFn(type){
+        sortType=type;
+        getAdvList(pageIndex);
+    }
+    function getAdvList(pageI){
+        var xhr=new XMLHttpRequest();
+        xhr.open("get","getAdvList?pageIndex="+pageI+"&type="+sortType+"&advType="+advType);
+        xhr.send();
+        xhr.onload=function(){
+            var obj=JSON.parse(xhr.responseText);
+            pageIndex=obj.pageIndex;
+            document.querySelector("#wrap").innerHTML=baidu.template("tp",obj);
+        }
+    }
+    function getAdvInfoById(id){
+        var xhr=new XMLHttpRequest();
+        xhr.open("get","getAdvInfoById?id="+id);
+        xhr.send();
+        xhr.onload=function(){
+            var obj=JSON.parse(xhr.responseText);
+            document.advForm.advName.value=obj.advInfo.advName;
+            document.advForm.advType.value=obj.advInfo.advType;
+            document.advForm.advUrl.value=obj.advInfo.advUrl;
+            document.advForm.orderBy.value=obj.advInfo.orderBy;
+            document.querySelector("#myPic").src=obj.advInfo.advPic;
+            document.advForm.id.value=obj.advInfo._id;
+            btn.value="修改";
+        }
+    }
+</script>
+</html>

@@ -1,0 +1,31 @@
+1、添加广告接口
+    地址：http://127.0.0.1/addAdv
+    访问方式：POST
+    传递参数：
+        advName:广告标题
+        advType:广告类别  1、轮播图  2、轮播图底部  3、优品精选  4、热门回收
+        advPic:广告图片
+        advUrl:广告链接
+        orderBy:排序，数字越大越靠前
+    返回的结果：
+        {
+            ok:1,// 1成功，2失败
+            msg:xxxxx
+        }
+2、前台展示广告接口
+    接口地址：http://127.0.0.1/getAdvListByType
+    访问方式：get
+    传递参数：
+        1、advType
+        2、limitNum
+    返回的参数
+        {
+            ok:1
+            advList ,advInfo
+        }
+
+ //
+1、默认排序： 先按orderby,addtime
+2、orderby
+3、addTime
+4、type

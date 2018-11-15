@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商品界面</title>
+    <script src="js/baiduTemplate.js"></script>
+    <style>
+        a{
+            text-decoration:none;
+            color:blue;
+            font-size:14px;
+        }
+        table{
+            width:100%;
+            border:1px solid yellowgreen;
+            border-collapse:collapse;
+            text-align:center;
+        }
+        table td{
+            border:1px solid yellowgreen;
+        }
+        .select input {
+            border:0;
+        }
+    </style>
+</head>
+<body>
+<form action=""  name="proForm" id="myForm">
+    <input type="text" name="id">
+    <p>商品标题：<input type="text" name="proName"></p>
+    <p>商品类别：<select name="proType" id="">
+        <option value="1">轮播图的底部</option>
+        <option value="2">优品精选</option>
+        <option value="3">热门回收</option>
+    </select>
+    </p>
+    <p >商品图片：<input type="file" name="proPic">
+        <img src="" width="150" alt="" id="myPic">
+    </p>
+    <p>商品链接：<input type="text" name="proUrl"></p>
+    <p>商品价格：<input type="text" name="proPrice"></p>
+    <p>商品排序：<input type="text" name="orderBy"></p>
+    <p><input type="button" name="btn" value="提交"></p>
+</form>
+<div class="select" >
+    <input type="button" value="全部" name="type" onclick="getProType(0)" >
+    <input type="button" value="轮播图底部" name="type" onclick="getProType(1)">
+    <input type="button" value="优品精选" name="type" onclick="getProType(2)">
+    <input type="button" value="热门回收" name="type" onclick="getProType(3)">
+    &nbsp;&nbsp;
+    <!--排序-->
+    <input type="button" value="默认" name="sort" onclick="getProSort(1)">
+    <input type="button" value="orderBy" name="sort" onclick="getProSort(2)">
+    <input type="button" value="proTime" name="sort" onclick="getProSort(3)">
+    <input type="button" value="类型" name="sort" onclick="getProSort(4)">
+
+</div>
+<div id="wrap">
+
+</div>
+<script type="text/html" id="tp">
+    <table>
+        <tr>
+            <td>商品标题</td>
+            <td>商品类别</td>
+            <td>商品图片</td>
+            <td>商品链接</td>
+            <td>商品价格</td>
+            <td>商品时间</td>
+            <td>商品排序</td>
+            <td>操作</td>
+        </tr>
+        <%for( var i=0;i<proList.length;i++ ){%>
+        <tr>
+            <td><%=proList[i].proName%></td>
+            <td><%=proList[i].proType%></td>
+            <td><img width="100" src="<%=proList[i].proPic%>" alt=""></td>
+            <td><%=proList[i].proUrl%></td>
+            <td><%=proList[i].proPrice%></td>
+            <td><%=proList[i].proTime%></td>
+            <td><%=proList[i].orderBy%></td>
+            <td><a href="javascript:;" onclick="delProList('<%=proList[i]._id%>')">删除</a> <a href="javascript:;" onclick="upProInfoById('<%=proList[i]._id%>')">修改</a></td>
+        </tr>
+        <%}%>
+    </table>
+    <div>
+        <a href="javascript:;" onclick="getProList(pageIndex-1)">上一页</a>
+        <%=pageIndex%>/<%=pageSum%>
+        <a href="javascript:;" onclick="getProList(pageIndex+1)">下一页</a>
+    </div>
+</script>
+</body>
+</html>
+<script>
+    var btn = document.proForm.btn;
+    var pageIndex = 1;
+    var proType = 0;
+    var proSort = 1;
+    getProList( 1 );
+
+    var select = document.querySelector( ".select" );
+    var typeBtns = select.querySelectorAll( "input[name='type']" );//获取所有的type按钮
+    var sortBtns = select.querySelectorAll( "input[name='sort']" );//获取所有的sort按钮
+    typeBtns[proType].style.background = "red";
+    sortBtns[proSort - 1].style.background = "red";
+
+    btn.onclick = function(){
+        var url = "http://127.0.0.1/addPro"
+        if( document.proForm.id.value.length > 0 ){
+            url = "http://127.0.0.1/upPro"//修改
+        }
+        var formdata = new FormData( document.querySelector( "#myForm" ) );//表单中的所有元素
+        var xhr = new XMLHttpRequest();
+        xhr.open( "post",url );
+        xhr.send( formdata );
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            if( obj.ok === 1 ){
+                //console.log(xhr.responseText);
+                document.proForm.reset();
+                btn.value = "提交";
+                getProList( pageIndex );
+            }else{
+                console.log( obj.msg );
+            }
+        }
+    }
+
+    //商品搜索查询
+    function getProType( type ){
+        for( var i = 0;i < typeBtns.length;i ++ ){
+            typeBtns[i].style.background = null;
+        }
+        typeBtns[type].style.background = "red";
+        proType = type;
+        getProList( pageIndex );
+    }
+
+    //商品排序查询
+    function getProSort( sort ){
+        for( var i = 0;i < sortBtns.length;i ++ ){
+            sortBtns[i].style.background = null;
+        }
+        sortBtns[sort-1].style.background = "red";
+        proSort = sort;
+        getProList( pageIndex );
+    }
+
+    //获取商品信息
+    function getProList( pageI ){
+        console.log(pageI);
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","getProList?pageIndex=" + pageI + "&proType=" + proType + "&proSort" + proSort);
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            pageIndex = obj.pageIndex;
+            pageSum =obj.pageSum;
+            document.querySelector( "#wrap" ).innerHTML = baidu.template("tp",{
+
+                proList:obj.proList
+            })
+        }
+    }
+
+    //商品删除
+    function delProList( id ){
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","delProInfoById?id=" + id );
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            if( obj.ok === 1 )
+                getProList( pageIndex );
+            else
+                console.log( obj.msg );
+        }
+    }
+
+    //商品修改
+    function  upProInfoById( id ){
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","getProInfoById?id=" + id);
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            document.proForm.id.value = obj.proInfo._id;
+            document.proForm.proName.value = obj.proInfo.proName;
+            document.proForm.proType.value = obj.proInfo.proType;
+            document.proForm.proUrl.value = obj.proInfo.proUrl;
+            document.proForm.proPrice.value = obj.proInfo.proPrice;
+            document.proForm.orderBy.value = obj.proInfo.orderBy;
+            document.querySelector("#myPic").src=obj.proInfo.proPic;
+            btn.value = "修改";
+        }
+    }
+</script>

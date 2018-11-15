@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="lib/vue.js"></script>
+    <script src="lib/vue-resource.js"></script>
+    <script src="lib/vue-filters.js"></script>
+</head>
+<body>
+<div id="myApp">
+    <components :is="comArr[index]" @gocom="goCom"></components><!--接收触发信息，获取方法-->
+</div>
+</body>
+<!--商品信息模板-->
+<template id="goodsTp">
+    <div>
+        <div>
+            <input type="button" value="我的购物车" @click="$emit('gocom',2,-1)">
+        </div>
+        <div v-for="item in goodsList">
+             <h3>商品名称:{{item.goodsName}}</h3>
+             <p>商品价格:{{item.goodsPrice | currency}}</p>
+             <p>库存数量:{{item.storeNum}}</p>
+             <p>上架时间:{{item.addTime | date}}</p>
+             <input type="button" value="加入购物车" @click="joinCar(item._id)">
+             <hr/>
+        </div>
+    </div>
+</template>
+<!--用户登录模板-->
+<template id="loginTp">
+<div>
+    <p>手机号码：<input type="text" v-model="phoneId"></p>
+    <p>验证码：<input type="text" v-model="code"></p>
+    <p><input type="button" value="登录" @click="login"></p>
+</div>
+</template>
+<!--购物车信息模板-->
+<template id="cartTp">
+    <div>
+        <div>
+            <input type="button" value="返回首页" @click="$emit('gocom',0,-1)">
+            <input type="button" value="退出登陆" @click="outeLogin">
+        </div>
+        <div>
+            <img width="20" @click="changeAllIsOk" :src="allIsOk?'./images/yes.png':'./images/no.png'"  alt="">
+            总价：{{sumPrice | currency}}
+        </div>
+        <div v-for="item in cartList">
+            <p><img width="20" @click="changeCartInfo(item._id,item.isOk)" :src="item.isOk?'./images/yes.png':'./images/no.png'" alt="">{{item.goodsName}}</p>
+            <p>单价:{{item.goodsPrice | currency}}</p>
+            <p>数量: <input @click="buyNumRem(item._id)" type="button" value="-">{{item.buyNum}}<input @click="buyNumAdd(item._id)" type="button" value="+"></p>
+            <p>小计:{{item.buyNum*item.goodsPrice | currency}}</p>
+            <hr/>
+        </div>
+    </div>
+</template>
+<script>
+    new Vue({
+        el:"#myApp",
+        data:{
+            index:localStorage.index || 0,
+            fromIndex:-1,
+            comArr:["goods","login","cart"],
+        },
+        methods:{
+           goCom(toIndex,fromIndex){//去哪个界面，来自哪个界面
+               //当用户登陆过时
+               if(localStorage.phoneId){
+                   if(fromIndex<0){
+                       this.index=toIndex;//跳转到去的那个页面
+                  }else{//如果有返回页面
+                       this.index=this.fromIndex;//跳转到返回的那个页面
+                  }
+                   this.fromIndex=-1;
+               }//当用户未登录过时
+              else{
+                 this.index=toIndex;//跳转到去的那个页面
+                   //没有返回页面默认-1，有返回页面，fromIndex为传的参数
+                 this.fromIndex=fromIndex || -1;
+               }
+               //console.log( this.index );
+               localStorage.index = this.index;
+           }
+        },
+        components:{
+            //商品页面
+            goods:{
+                data(){
+                   return {
+                       num:1,
+                       goodsList:[]
+                   }
+                },
+               mounted(){
+                    this.getGoodsList();
+                },
+                methods:{
+                    getGoodsList(){
+                        this.$http.get("http://127.0.0.1/getGoodsList").then(({data}) => {//data为获取到的数据
+                            //console.log( data );
+                            this.goodsList = data.goodsList;//用箭头函数，this指向父组件，进行传递数据并保存
+                        })
+                    },
+                   joinCar(id){
+                       if(localStorage.phoneId){//已经登录,将商品加入购物车
+                           this.$http.get("http://127.0.0.1/joinCart",{
+                               goodsId:id,
+                               phoneId:localStorage.phoneId
+                           }).then(({data}) => {
+                               if( data.ok === 1 ){
+                                   this.getGoodsList();
+                               }else{
+                                   alert( data.msg );
+                               }
+                           })
+                       }else{//未登录
+                           this.$emit( "gocom",1,0 );//toIndex-->去登录页   fromIndex-->来自商品页
+                       }
+                   },
+                },
+
+                template:"#goodsTp",
+            },
+            //用户登录
+            login:{
+                data(){
+                    return{
+                        phoneId:"",
+                        code:""
+                    }
+                },
+                //用户登录的手机号和验证码需存入数据库
+                methods:{
+                    login(){
+                        this.$http.post("http://127.0.0.1/login",{
+                            phoneId:this.phoneId,
+                            code : this.code
+                        }).then(({data}) => {
+                            if( data.ok === 1 ){
+                                localStorage.phoneId = data.phoneId;
+                                this.$emit( "gocom",0);
+                            }else{
+                                alert( data.msg );
+                            }
+                        })
+                    }
+                },
+                template:"#loginTp"
+            },
+            //购物车
+            cart:{
+                data(){
+                    return{
+                        cartList:[]
+                    }
+                },
+
+                mounted(){
+                    if(!localStorage.phoneId){//如果用户id不存在，跳转到登录页面
+                        this.$emit("gocom",1,2);
+                    }else{
+                        console.log(this.cartList);
+                        this.getCartList();
+                    }
+                },
+                computed:{
+                    sumPrice(){
+                        var sum = 0;
+                        for( var i = 0;i < this.cartList.length;i++ ){
+                            if( this.cartList[i].isOk ){
+                                sum+=( this.cartList[i].buyNum*this.cartList[i].goodsPrice);
+                            }
+                        }
+                        return sum;
+                    },
+                    allIsOk(){
+                        var isOk=1;// 全部选 中  0未全部选 中
+                        for(var i=0;i<this.cartList.length;i++){
+                            if(!this.cartList[i].isOk){
+                                isOk=0;
+                                break;
+                            }
+                        }
+                        return isOk;
+                    }
+                },
+
+                template:"#cartTp",
+                methods:{
+                    //退出登录
+                    outeLogin(){
+                        localStorage.clear();
+                        this.$emit("gocom",0,-1);
+                    },
+                    //获取购物车信息
+                    getCartList(){
+                        this.$http.get("http://127.0.0.1/getCartList",{
+                            phoneId:localStorage.phoneId
+                        }).then(({data}) => {
+                            if( data.ok === 1 ){
+                                this.cartList = data.cartList
+                            }
+                        })
+                    },
+                    //点亮商品
+                    changeCartInfo( id,isOk ){
+                        this.$http.get("http://127.0.0.1/changeCartInfo",{
+                            id,
+                            isOk
+                        }).then(({data}) => {
+                                this.getCartList();
+                        })
+                    },
+                    //全选
+                    changeAllIsOk(){
+                         this.$http.get("http://127.0.0.1/changeAllIsOk",{
+                            phoneId:localStorage.phoneId,
+                            allIsOk:this.allIsOk
+                         }).then(({data}) => {
+                             this.getCartList();
+                         });
+                    },
+                   //数量减少
+                   buyNumRem( id ){
+                        //alert(id);
+                        this.$http.get("http://127.0.0.1/buyNumRem",{
+                            goodsId:id
+                        }).then(({data}) => {
+                            this.getCartList();
+                        })
+                   },
+                    //数量增加
+                    buyNumAdd( id ){
+                        this.$http.get("http://127.0.0.1/buyNumAdd",{
+                            goodsId:id//购物车中商品id
+                        }).then(({data}) => {
+                            if( data.ok === 1 ){
+                                this.getCartList();
+                            }else{
+                                alert( data.msg );
+                            }
+                        })
+                    }
+                }
+            }
+        }
+    })
+</script>
+</html>

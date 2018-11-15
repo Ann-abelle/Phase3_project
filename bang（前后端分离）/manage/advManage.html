@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>广告界面</title>
+    <script src="js/baiduTemplate.js"></script>
+    <style>
+        a{
+            text-decoration:none;
+            color:blue;
+            font-size:14px;
+        }
+        table{
+            width:100%;
+            border:1px solid yellowgreen;
+            border-collapse:collapse;
+            text-align:center;
+        }
+        table td{
+            border:1px solid yellowgreen;
+        }
+        .select input {
+            border:0;
+        }
+    </style>
+</head>
+<body>
+<form action="" name="advForm" id="myForm">
+    <input type="text" name="id">
+    <p>广告标题：<input type="text" name="advName"></p>
+    <p>广告类别：<select name="advType" id="">
+            <option value="1">轮播图</option>
+            <option value="2">轮播图的底部</option>
+            <option value="3">优品精选</option>
+            <option value="4">热门回收</option>
+        </select>
+    </p>
+    <p>广告图片：<input type="file" name="advPic">
+                <img src="" width="150" alt="" id="myPic">
+    </p>
+    <p>广告链接：<input type="text" name="advUrl"></p>
+    <p>广告排序：<input type="text" name="orderBy"></p>
+    <p><input type="button" name="btn" value="提交"></p>
+</form>
+<div class="select">
+    <input type="button" value="全部" name="type" onclick="getAdvType(0)">
+    <input type="button" value="轮播图" name="type" onclick="getAdvType(1)">
+    <input type="button" value="轮播图底部" name="type" onclick="getAdvType(2)">
+    <input type="button" value="优品精选" name="type" onclick="getAdvType(3)">
+    <input type="button" value="热门回收" name="type" onclick="getAdvType(4)">
+    <!--排序查找-->
+    &nbsp;&nbsp;
+    <input type="button" value="默认" name="sort" onclick="getAdvSort(1)">
+    <input type="button" value="orderBy" name="sort" onclick="getAdvSort(2)">
+    <input type="button" value="addTime" name="sort" onclick="getAdvSort(3)">
+    <input type="button" value="类型" name="sort" onclick="getAdvSort(4)">
+
+</div>
+<div  id="wrap">
+
+</div>
+<!--表格模板-->
+<script type="text/html" id="tp">
+    <table>
+        <tr>
+            <td>广告标题</td>
+            <td>广告链接</td>
+            <td>广告图片</td>
+            <td>广告排序</td>
+            <td>广告时间</td>
+            <td>广告类型</td>
+            <td>操作</td>
+        </tr>
+        <%for(var i=0;i<advList.length;i++){%>
+        <tr>
+            <td><%=advList[i].advName%></td>
+            <td><%=advList[i].advUrl%></td>
+            <td><img width="100" src="<%=advList[i].advPic%>" alt=""></td>
+            <td><%=advList[i].orderBy%></td>
+            <td><%=advList[i].advTime%></td>
+            <td><%=advList[i].advType%></td>
+            <td><a href="javascript:;" onclick="delAdvList('<%=advList[i]._id%>')">删除</a> <a href="javascript:;" onclick="getAdvInfoById('<%=advList[i]._id%>')">修改</a></td>
+        </tr>
+        <%}%>
+    </table>
+    <div>
+        <a href="javascript:;" onclick="getAdvList(pageIndex-1)">上一页</a>
+        <%=pageIndex%>/<%=pageSum%>
+        <a href="javascript:;" onclick="getAdvList(pageIndex+1)">下一页</a>
+    </div>
+</script>
+</body>
+</html>
+<script>
+    var btn = document.querySelector( "input[name='btn']" );
+    var pageIndex = 1;
+    var advType = 0;
+    var advSort = 1;
+    getAdvList( pageIndex );
+
+    var select = document.querySelector( ".select" );
+    var typeBtns = select.querySelectorAll( "input[name='type']" );//获取所有的type按钮
+    var sortBtns = select.querySelectorAll( "input[name='sort']" );//获取所有的sort按钮
+    typeBtns[advType].style.background = "red";
+    sortBtns[advSort - 1].style.background = "red";
+
+
+    btn.onclick = function(){
+        var url = "http://127.0.0.1/addAdv"
+        if( document.advForm.id.value.length > 0 ){
+            url = "http://127.0.0.1/upAdv"//修改
+        }
+        var formdata = new FormData( document.querySelector( "#myForm" ) );//表单中的所有元素
+        var xhr = new XMLHttpRequest();
+        xhr.open( "post", url);
+        xhr.send( formdata );
+        xhr.onload = function(){
+            var obj = JSON.parse(xhr.responseText);
+            if( obj.ok === 1 ){
+                document.advForm.reset();
+                btn.value = "提交";
+                getAdvList( pageIndex );
+            }else{
+                alert( 1 );
+            }
+            //console.log( xhr.responseText );
+        }
+    }
+
+    //搜索查询
+    function getAdvType( type ){
+        for( var i = 0;i < typeBtns.length;i ++ ){
+            typeBtns[i].style.background = null;
+        }
+        typeBtns[type].style.background = "red";
+        advType = type;
+        getAdvList( pageIndex );
+    }
+
+    //排序搜索
+    function getAdvSort( sort ){
+        for( var i = 0;i < sortBtns.length;i ++ ){
+            sortBtns[i].style.background = null;
+        }
+        sortBtns[sort-1].style.background = "red";
+        advSort = sort;
+        getAdvList( pageIndex );
+    }
+
+    //获取数据
+    function getAdvList( pageI ){
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","getAdvList?pageIndex=" + pageI + "&advType=" + advType +"&advSort=" + advSort);
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            console.log(xhr.responseText);
+            pageIndex = obj.pageIndex;
+            pageSum = obj.pageSum;
+            document.querySelector( "#wrap" ).innerHTML = baidu.template("tp",{
+                advList:obj.advList
+            })
+            //console.log( xhr.responseText);
+        }
+    }
+
+    //删除数据
+    function delAdvList( id ){
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","delAdvInfoById?id=" + id );
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            if( obj.ok === 1 )
+                getAdvList( pageIndex );
+            else
+                console.log( obj.msg );
+        }
+    }
+
+    //修改数据
+    function getAdvInfoById( id ){
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get","getAdvInfoById?id=" + id);
+        xhr.send();
+        xhr.onload = function(){
+            var obj = JSON.parse( xhr.responseText );
+            document.advForm.id.value = obj.advInfo._id;
+            document.advForm.advName.value = obj.advInfo.advName;
+            document.advForm.advType.value = obj.advInfo.advType;
+            document.advForm.advUrl.value = obj.advInfo.advUrl;
+            document.advForm.orderBy.value = obj.advInfo.orderBy;
+            document.querySelector("#myPic").src=obj.advInfo.advPic;
+            btn.value = "修改";
+        }
+    }
+
+
+
+</script>

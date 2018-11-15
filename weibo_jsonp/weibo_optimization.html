@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>微博</title>
+<script src="js/baiduTemplate.js"></script>
+<link href="style/weibo.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div class="jyArea">
+<!--留言-->
+     <div class="takeComment">
+        <textarea name="textarea" class="takeTextField" id="tijiaoText"></textarea>
+        <div class="takeSbmComment">
+            <input type="button" class="inputs" value="" />
+        </div>
+    </div>
+<!--已留-->
+    <div class="commentOn">
+        
+    </div>
+</div>
+<!--开始创建模板-->
+<script type="text/html" id="tp">
+	<%if(contextList.length<=0){%>
+	<div class="noContent">暂无留言</div>
+	<%}%>
+        <div class="messList">
+        	<%for(var i =0;i<contextList.length;i++){%>
+        	<div class="reply">
+                <p class="replyContent"><%=contextList[i].context%></p>
+                <p class="operation">
+                    <span class="replyTime"><%=contextList[i].addTime%></span>
+                    <span class="handle">
+                    	<a href="javascript:;" class="top" onclick="topordown(<%=contextList[i].id%>,1)"><%=contextList[i].topNum%></a>
+                        <a href="javascript:;" class="down_icon" onclick="topordown(<%=contextList[i].id%>,2)"><%=contextList[i].downNum%></a>
+                        <a href="javascript:;" class="cut" onclick="getApi(' deleteweibo?id='+<%=contextList[i].id%>+'&cb=callback')">删除</a>
+                    </span>
+                </p>
+            </div>
+            <%}%>
+        </div>
+        <div class="page">
+        	<a href="javascript:;" class="active">1</a>
+        	<a href="javascript:;">2</a>
+        	<a href="javascript:;">3</a>
+        </div>
+</script>
+
+</body>
+<script type="text/javascript">
+	var btn = document.querySelector( ".inputs" );
+	//刷新页面的时候，获取json里面的数据，调用获取数据函数	
+	getWeibo();
+	function getApi(url){
+		var script = document.createElement( "script" );
+		script.src = "http://127.0.0.1/" + url;
+		document.body.appendChild(script);
+        document.body.removeChild(script);
+	}
+	function callback( obj ){
+		 if(obj.ok==1){//成功
+            getWeibo();// 获取数据
+        }else{
+            alert(obj.msg);// 失败
+        }
+	}
+	btn.onclick = function(){
+		getApi( "addweibo?cb=callback&context=" + document.querySelector( "#tijiaoText" ).value );
+	}
+	
+	//获取信息
+	function getWeibo(){
+		getApi( "getweibo?cb=commentOnHtml" );
+	}
+	
+	//删除信息
+    function deleteWeibo( id ){
+    	getApi( "deleteweibo?id=" + id + "&cb=callback" );
+    }
+    
+    //更新信息
+    function topordown( id,type ){
+    	getApi( "topordown?id=" + id + "&type=" + type + "&cb=callback" );
+    }
+	//获取数据后的回调函数
+	function commentOnHtml(obj){
+		if(obj.ok==1){
+			//当数据获取成功的时候，使用创建的模板，存放数据信息
+			document.querySelector(".commentOn").innerHTML=baidu.template("tp",{
+				contextList:obj.contextList
+			})
+		}else{
+			alert(obj.msg);
+		}
+	}
+</script>
+</html>
