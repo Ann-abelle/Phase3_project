@@ -1,5 +1,6 @@
 const express=require("express");
 const db=require("./modules/db");
+const common = require( "./modules/common );
 const bodyParser=require("body-parser");
 const app=express();
 app.use(bodyParser.json());
@@ -30,7 +31,7 @@ app.post("/addweibo",function(req,res) {
                 context: req.body.context,
                 topNum: 0,
                 downNum: 0,
-                addTime: Date.now()
+                addTime: common.getNowTime()
             }, function (err, results) {
                 res.json({
                     ok: 1,
