@@ -3,7 +3,7 @@
         <!--留言-->
         <takeComment @getContextList="getContextList(pageIndex)"></takeComment><!--子向父传事件-->
         <!--已留-->
-        <commentOn :contextList="contextList" :pageIndex="pageIndex" :pageSum="pageSum" ></commentOn><!--进行操作-->
+        <commentOn :contextList="contextList" :pageIndex="pageIndex" :pageSum="pageSum" @getContextList="getContextList"></commentOn><!--进行操作-->
     </div>
 </template>
 
